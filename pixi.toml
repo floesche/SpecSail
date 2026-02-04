@@ -6,9 +6,12 @@ platforms = ["linux-64"]
 version = "0.1.0"
 
 [tasks]
-run = "python spectrometer.py"
-log = "python spectrometer_logger.py"
-plot = "python plot_spectra.py"
+run = "python -u spectrometer.py"
+log = "python -u spectrometer_logger.py"
+plot = "python -u plot_spectra.py"
+calibrate = "python -u calibrate_sunlight.py"
+save = "python -u save_results.py"
+clear = "rm -f data/*.csv"
 
 [dependencies]
 seabreeze = ">=2.11.0,<3"
