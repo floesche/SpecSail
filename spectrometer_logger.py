@@ -148,24 +148,30 @@ def bin_spectrum(wavelengths, intensities, bin_size=5):
     return bin_centers, binned_intensities
 
 
-def save_csv(timestamp, bin_centers, binned_values, output_dir, calibrated=True, bin_size=5):
-    """Save spectrum data to a timestamped CSV file."""
+def save_csv(timestamp, bin_centers, all_binned_values, output_dir, calibrated=True, bin_size=5):
+    """Save all individual spectra to a timestamped CSV file (one column per spectrum)."""
     filename = output_dir / f"spectrum_{timestamp.strftime('%Y%m%d_%H%M%S')}.csv"
+
+    n_spectra = len(all_binned_values)
 
     # Calibrated data: convert from µW/cm²/nm to µW/cm² by multiplying by bin width
     if calibrated:
-        header = "wavelength_nm,irradiance_uW_cm2"
-        values_to_save = binned_values * bin_size
+        col_prefix = "irradiance_uW_cm2"
+        values_to_save = [v * bin_size for v in all_binned_values]
     else:
-        header = "wavelength_nm,intensity_counts"
-        values_to_save = binned_values
+        col_prefix = "intensity_counts"
+        values_to_save = all_binned_values
+
+    # Create header: wavelength_nm, spectrum_0, spectrum_1, ...
+    header = "wavelength_nm," + ",".join(f"{col_prefix}_{i}" for i in range(n_spectra))
 
     with open(filename, 'w') as f:
         f.write(header + "\n")
-        for wl, value in zip(bin_centers, values_to_save):
-            f.write(f"{wl:.1f},{value:.6f}\n")
+        for row_idx, wl in enumerate(bin_centers):
+            row_values = [v[row_idx] for v in values_to_save]
+            f.write(f"{wl:.1f}," + ",".join(f"{val:.6f}" for val in row_values) + "\n")
 
-    return filename
+    return filename, n_spectra
 
 
 def main():
@@ -246,40 +252,45 @@ def main():
                 intensities = spec.intensities(correct_dark_counts=True)
                 spectra.append(intensities)
 
-            # Average all spectra in the window
-            averaged_intensities = np.mean(spectra, axis=0)
             n_spectra = len(spectra)
 
-            # Apply calibration if available
-            if calibrated:
-                if cal_source == "file":
-                    values = apply_calibration_file(
-                        averaged_intensities, cal_coefficients, integration_time_us
-                    )
+            # Apply calibration and bin each spectrum individually
+            all_binned_values = []
+            bin_centers = None
+
+            for intensities in spectra:
+                # Apply calibration if available
+                if calibrated:
+                    if cal_source == "file":
+                        values = apply_calibration_file(
+                            intensities, cal_coefficients, integration_time_us
+                        )
+                    else:
+                        values = apply_calibration_eeprom(
+                            intensities, cal_coefficients, integration_time_us, area
+                        )
                 else:
-                    values = apply_calibration_eeprom(
-                        averaged_intensities, cal_coefficients, integration_time_us, area
-                    )
-                unit = "µW/cm²"
-            else:
-                values = averaged_intensities
-                unit = "counts"
+                    values = intensities
 
-            # Bin the spectrum into 5nm steps
-            bin_centers, binned_values = bin_spectrum(
-                wavelengths, values, WAVELENGTH_BIN_SIZE
-            )
+                # Bin the spectrum into 5nm steps
+                bin_centers, binned_values = bin_spectrum(
+                    wavelengths, values, WAVELENGTH_BIN_SIZE
+                )
+                all_binned_values.append(binned_values)
 
-            # Save to CSV (calibrated values are converted to µW/cm² per bin)
-            filename = save_csv(timestamp, bin_centers, binned_values, OUTPUT_DIR, calibrated, WAVELENGTH_BIN_SIZE)
+            unit = "µW/cm²" if calibrated else "counts"
+
+            # Save all spectra to CSV (calibrated values are converted to µW/cm² per bin)
+            filename, n_saved = save_csv(timestamp, bin_centers, all_binned_values, OUTPUT_DIR, calibrated, WAVELENGTH_BIN_SIZE)
 
             # Beep to signal file saved
             print('\a', end='', flush=True)
 
-            # Show max value (in saved units)
-            max_val = np.nanmax(binned_values) * WAVELENGTH_BIN_SIZE if calibrated else np.nanmax(binned_values)
+            # Show max value across all spectra (in saved units)
+            all_max = max(np.nanmax(v) for v in all_binned_values)
+            max_val = all_max * WAVELENGTH_BIN_SIZE if calibrated else all_max
             print(f"{counter:03d} [{timestamp.strftime('%H:%M:%S')}] Saved {filename.name} "
-                  f"({n_spectra} spectra averaged, "
+                  f"({n_saved} spectra, "
                   f"max: {max_val:.4f} {unit})")
 
         if max_files is not None and counter >= max_files:

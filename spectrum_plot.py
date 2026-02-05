@@ -12,7 +12,12 @@ import numpy as np
 
 
 def load_spectrum(filepath):
-    """Load a spectrum CSV file. Returns wavelengths, values, and whether data is calibrated."""
+    """
+    Load a spectrum CSV file and return the mean spectrum.
+
+    Each CSV file may contain multiple individual spectra (one per column).
+    Returns wavelengths, mean_values (1D array), and whether data is calibrated.
+    """
     with open(filepath) as f:
         header = f.readline().strip()
     # Check for calibrated data (either old per-nm or new per-bin format)
@@ -20,7 +25,16 @@ def load_spectrum(filepath):
 
     data = np.genfromtxt(filepath, delimiter=',', skip_header=1)
     wavelengths = data[:, 0]
-    values = data[:, 1]
+
+    # Handle both old format (single column) and new format (multiple columns)
+    if data.ndim == 1 or data.shape[1] == 2:
+        # Old format: single spectrum
+        values = data[:, 1] if data.ndim > 1 else data
+    else:
+        # New format: multiple spectra (one per column after wavelength)
+        # Average across all spectra in this file
+        values = np.nanmean(data[:, 1:], axis=1)
+
     return wavelengths, values, calibrated
 
 
@@ -29,6 +43,7 @@ def load_all_spectra(data_dir):
     Load all spectrum CSV files from a directory.
 
     Returns (wavelengths, all_values, calibrated, csv_files) or (None, None, None, []) if no files found.
+    all_values has shape [n_files, n_wavelengths] - one mean spectrum per file.
     """
     csv_files = sorted(Path(data_dir).glob("spectrum_*.csv"))
 
