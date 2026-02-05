@@ -141,9 +141,9 @@ def create_spectrum_plot(wavelengths, all_values, calibrated, n_files, title=Non
         # Need to draw canvas to get accurate transforms
         fig.canvas.draw()
 
-        # Convert highest peak to display coordinates and add 20 pixels
+        # Convert highest peak to display coordinates and add 50 pixels
         highest_display = ax.transData.transform((wavelengths[0], highest_peak_val))
-        label_y_display = highest_display[1] + 20
+        label_y_display = highest_display[1] + 50
 
         for idx in prominent_peaks:
             wl = wavelengths[idx]

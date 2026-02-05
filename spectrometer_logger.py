@@ -11,6 +11,7 @@ calibration from file (sunlight calibration) or spectrometer EEPROM.
 
 import json
 import subprocess
+import sys
 import time
 from datetime import datetime
 from pathlib import Path
@@ -216,11 +217,21 @@ def main():
     else:
         print(f"\nLogging raw spectra (counts)")
     print(f"Integration window: {INTEGRATION_WINDOW_S}s, binned to {WAVELENGTH_BIN_SIZE}nm steps")
-    print("Press Ctrl+C to stop\n")
+
+    # Parse optional count argument
+    max_files = None
+    if len(sys.argv) > 1:
+        try:
+            max_files = int(sys.argv[1])
+            print(f"Will collect {max_files} files\n")
+        except ValueError:
+            print(f"Invalid count: {sys.argv[1]}, running until Ctrl+C\n")
+    else:
+        print("Press Ctrl+C to stop\n")
 
     counter = 0
     try:
-        while True:
+        while max_files is None or counter < max_files:
             counter += 1
 
             # Play click sound to signal new file is starting
@@ -271,6 +282,8 @@ def main():
                   f"({n_spectra} spectra averaged, "
                   f"max: {max_val:.4f} {unit})")
 
+        if max_files is not None and counter >= max_files:
+            print(f"\nCollected {max_files} files.")
     except KeyboardInterrupt:
         print("\nStopping...")
     finally:
