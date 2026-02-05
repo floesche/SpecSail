@@ -12,6 +12,7 @@ plot = "python -u plot_spectra.py"
 calibrate = "python -u calibrate_sunlight.py"
 save = "python -u save_results.py"
 clear = "rm -f data/*.csv"
+migrate = "python -u migrate_data.py"
 
 [dependencies]
 seabreeze = ">=2.11.0,<3"

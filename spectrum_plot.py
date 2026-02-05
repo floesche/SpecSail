@@ -65,9 +65,12 @@ def load_all_spectra(data_dir):
     return wavelengths, all_values, calibrated, csv_files
 
 
-def create_spectrum_plot(wavelengths, all_values, calibrated, n_files, title=None):
+def create_spectrum_plot(wavelengths, all_values, calibrated, n_files, title=None, y_min=0.1):
     """
     Create a spectrum plot figure.
+
+    Args:
+        y_min: Minimum value for y-axis (default: 0.1)
 
     Returns (fig, ax, mean_safe, total_values, mean_total, total_label, total_unit).
     """
@@ -113,7 +116,7 @@ def create_spectrum_plot(wavelengths, all_values, calibrated, n_files, title=Non
     fig, ax = plt.subplots(figsize=(16, 10))
 
     # Plot individual spectra with low alpha
-    clip_floor = 1e-6 if calibrated else 1e-1
+    clip_floor = min(1e-6, y_min) if calibrated else y_min
     for values in all_values:
         # Replace NaN/zeros/negatives with small value for log scale
         values_safe = np.where(np.isnan(values) | (values <= 0), clip_floor, values)
@@ -127,7 +130,7 @@ def create_spectrum_plot(wavelengths, all_values, calibrated, n_files, title=Non
     ax.set_ylabel(y_label, fontsize=12)
     ax.set_title(title, fontsize=14)
     ax.set_yscale('log')
-    ax.set_ylim(bottom=1e-1)
+    ax.set_ylim(bottom=y_min)
     ax.set_xlim(wavelengths.min(), wavelengths.max())
     ax.grid(True, alpha=0.3, which='both')
     ax.legend(loc='upper right')
