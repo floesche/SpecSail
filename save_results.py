@@ -2,7 +2,12 @@
 """
 Save spectrum results: plot to PNG and archive data files.
 
-Usage: python save_results.py "Result name"
+Creates a publication-quality PNG plot and moves the source CSV files
+to a named archive folder in results/.
+
+Usage
+-----
+    pixi run save "Experiment name"
 """
 
 import shutil
@@ -18,6 +23,13 @@ RESULTS_DIR = Path("results")
 
 
 def main():
+    """
+    Save spectrum results with a descriptive name.
+
+    Takes the result name from command-line arguments, loads all spectrum
+    files from data/, creates a plot saved as results/<name>.png, and
+    moves the CSV files to results/<name>_data/.
+    """
     # Get result name from command line
     if len(sys.argv) < 2:
         print("Usage: python save_results.py \"Result name\"")

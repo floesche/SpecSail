@@ -2,10 +2,12 @@
 """
 Plot all spectrum files from a data directory.
 
-Shows individual spectra as line plots and the mean spectrum.
-X-axis: wavelength (nm), Y-axis: irradiance (µW/cm² per 5nm bin, log scale)
+Creates a publication-quality plot showing individual spectra as semi-transparent
+lines with a bold mean spectrum. Uses logarithmic y-axis and annotates peak
+wavelengths.
 
-Usage:
+Usage
+-----
     pixi run plot                          # Plot spectra from data/
     pixi run plot <directory>              # Plot spectra from specified directory
     pixi run plot --min 0.01               # Set y-axis minimum to 0.01
@@ -26,6 +28,13 @@ DEFAULT_DATA_DIR = Path("data")
 
 
 def main():
+    """
+    Plot spectrum files from a directory.
+
+    Parses command-line arguments for data directory, y-axis limits,
+    output file, and peak display options. Loads all spectrum CSV files,
+    creates the plot, and either displays it interactively or saves to file.
+    """
     parser = argparse.ArgumentParser(description="Plot spectrum files")
     parser.add_argument("directory", nargs="?", default=None,
                         help="Data directory (default: data/)")

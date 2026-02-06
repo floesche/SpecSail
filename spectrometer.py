@@ -1,5 +1,14 @@
 #!/usr/bin/env python3
-"""Live spectrum viewer for Ocean Optics USB4000 spectrometer."""
+"""
+Live spectrum viewer for Ocean Optics USB4000 spectrometer.
+
+Displays a real-time plot of the current spectrum with auto-scaling.
+Useful for alignment, checking signal levels, and monitoring.
+
+Usage
+-----
+    pixi run run
+"""
 
 import matplotlib.pyplot as plt
 import matplotlib.animation as animation
@@ -10,6 +19,15 @@ from seabreeze.spectrometers import Spectrometer, list_devices
 
 
 def main():
+    """
+    Run the live spectrum viewer.
+
+    Connects to the first available Ocean Optics spectrometer and displays
+    a real-time animated plot of the spectrum. The plot auto-scales to
+    show the current intensity range and displays the peak wavelength.
+
+    The viewer updates every 100ms and runs until the plot window is closed.
+    """
     # List available devices
     devices = list_devices()
     if not devices:
@@ -48,7 +66,19 @@ def main():
                         verticalalignment='top', fontfamily='monospace')
 
     def update(frame):
-        """Update function for animation."""
+        """
+        Update the plot with a new spectrum reading.
+
+        Parameters
+        ----------
+        frame : int
+            Animation frame number (unused).
+
+        Returns
+        -------
+        tuple
+            Updated matplotlib artists (line, info_text).
+        """
         try:
             intensities = spec.intensities()
             line.set_ydata(intensities)

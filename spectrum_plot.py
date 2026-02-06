@@ -2,7 +2,8 @@
 """
 Shared spectrum plotting functionality.
 
-Used by plot_spectra.py and save_results.py.
+Provides functions for loading spectrum CSV files and creating
+publication-quality plots. Used by plot_spectra.py and save_results.py.
 """
 
 from pathlib import Path
@@ -16,7 +17,21 @@ def load_spectrum(filepath):
     Load a spectrum CSV file and return the mean spectrum.
 
     Each CSV file may contain multiple individual spectra (one per column).
-    Returns wavelengths, mean_values (1D array), and whether data is calibrated.
+    This function averages all spectra within the file.
+
+    Parameters
+    ----------
+    filepath : str or pathlib.Path
+        Path to the CSV file.
+
+    Returns
+    -------
+    wavelengths : numpy.ndarray
+        Array of wavelength values in nm.
+    values : numpy.ndarray
+        Mean irradiance/intensity values (averaged across all spectra in file).
+    calibrated : bool
+        True if data contains calibrated irradiance values.
     """
     with open(filepath) as f:
         header = f.readline().strip()
@@ -42,8 +57,24 @@ def load_all_spectra(data_dir):
     """
     Load all spectrum CSV files from a directory.
 
-    Returns (wavelengths, all_values, calibrated, csv_files) or (None, None, None, []) if no files found.
-    all_values has shape [n_files, n_wavelengths] - one mean spectrum per file.
+    Each file is averaged internally (if it contains multiple spectra),
+    resulting in one mean spectrum per file.
+
+    Parameters
+    ----------
+    data_dir : str or pathlib.Path
+        Directory containing spectrum_*.csv files.
+
+    Returns
+    -------
+    wavelengths : numpy.ndarray or None
+        Array of wavelength values in nm (None if no files found).
+    all_values : numpy.ndarray or None
+        Array of shape [n_files, n_wavelengths] with one mean spectrum per file.
+    calibrated : bool or None
+        True if data contains calibrated irradiance values.
+    csv_files : list of pathlib.Path
+        List of loaded CSV file paths (empty if no files found).
     """
     csv_files = sorted(Path(data_dir).glob("spectrum_*.csv"))
 
@@ -69,12 +100,45 @@ def create_spectrum_plot(wavelengths, all_values, calibrated, n_files, title=Non
     """
     Create a spectrum plot figure.
 
-    Args:
-        y_min: Minimum value for y-axis (default: 0.1)
-        y_max: Maximum value for y-axis (default: None, auto-scale)
-        all_peaks: If True, show all local maxima without filtering (default: False)
+    Plots individual spectra as semi-transparent lines with a bold mean spectrum.
+    Includes peak wavelength annotations, total irradiance statistics, and
+    uses a logarithmic y-axis.
 
-    Returns (fig, ax, mean_safe, total_values, mean_total, total_label, total_unit).
+    Parameters
+    ----------
+    wavelengths : numpy.ndarray
+        Array of wavelength values in nm.
+    all_values : numpy.ndarray
+        Array of shape [n_files, n_wavelengths] with spectrum data.
+    calibrated : bool
+        True if data contains calibrated irradiance values.
+    n_files : int
+        Number of spectrum files (for legend label).
+    title : str, optional
+        Plot title (default: auto-generated based on calibration status).
+    y_min : float, optional
+        Minimum value for y-axis (default: 0.1).
+    y_max : float, optional
+        Maximum value for y-axis (default: None, auto-scale).
+    all_peaks : bool, optional
+        If True, show all local maxima without filtering (default: False).
+
+    Returns
+    -------
+    fig : matplotlib.figure.Figure
+        The figure object.
+    ax : matplotlib.axes.Axes
+        The axes object.
+    mean_safe : numpy.ndarray
+        Mean spectrum with invalid values replaced for plotting.
+    total_values : list of float
+        Total irradiance/intensity for each spectrum.
+    mean_total : float
+        Mean total irradiance/intensity.
+    total_label : str
+        Label for total value (e.g., "Total Irradiance").
+    total_unit : str
+        Unit for total value (e.g., "µW/cm²").
     """
     # Set labels based on data type
     if calibrated:

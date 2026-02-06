@@ -2,8 +2,13 @@
 """
 Sunlight calibration for Ocean Optics USB4000 spectrometer.
 
-Uses the AM1.5G solar reference spectrum to compute calibration coefficients.
-Best results with clear sky; point at open sky, not directly at sun.
+Uses the AM1.5G solar reference spectrum (NREL/ASTM G173-03) to compute
+calibration coefficients for converting raw counts to absolute spectral
+irradiance. Best results with clear sky; point at open sky, not directly at sun.
+
+Usage
+-----
+    pixi run calibrate
 """
 
 import json
@@ -52,13 +57,36 @@ AM15G_REFERENCE = {
 
 
 def interpolate_reference(wavelengths):
-    """Interpolate AM1.5G reference to spectrometer wavelengths."""
+    """
+    Interpolate AM1.5G reference spectrum to spectrometer wavelengths.
+
+    Parameters
+    ----------
+    wavelengths : numpy.ndarray
+        Array of wavelengths from the spectrometer.
+
+    Returns
+    -------
+    numpy.ndarray
+        Reference irradiance values in µW/cm²/nm interpolated to the given
+        wavelengths. Values outside 300-900nm are set to 0.
+    """
     ref_wl = np.array(list(AM15G_REFERENCE.keys()))
     ref_irr = np.array(list(AM15G_REFERENCE.values()))
     return np.interp(wavelengths, ref_wl, ref_irr, left=0, right=0)
 
 
 def main():
+    """
+    Run the sunlight calibration procedure.
+
+    Guides the user through capturing a reference spectrum of sunlight,
+    then computes calibration coefficients by comparing measured counts
+    to the AM1.5G solar reference spectrum. Saves results to calibration.json.
+
+    The calibration is valid for wavelengths 300-900nm where the AM1.5G
+    reference provides reliable data.
+    """
     # Connect to spectrometer
     devices = list_devices()
     if not devices:

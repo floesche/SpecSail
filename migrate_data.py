@@ -2,14 +2,18 @@
 """
 Migrate legacy OceanView txt spectrometer files to CSV format.
 
-Converts tab-separated txt files (wavelength, irradiance in µW/cm²/nm) to the CSV format
-used by spectrum_plot.py and other tools in this project.
+Converts tab-separated txt files (wavelength, irradiance in W/m²/nm) to the
+CSV format used by spectrum_plot.py and other tools in this project.
 
-OceanView outputs absolute irradiance in µW/cm²/nm. This script:
-1. Bins to 5nm steps (averaging within each bin)
-2. Converts from µW/cm²/nm to µW/cm² per bin (multiply by bin width)
+The conversion process:
 
-Usage:
+1. Reads OceanView tab-separated data (wavelength, irradiance)
+2. Converts from W/m²/nm to µW/cm²/nm (factor of 100)
+3. Bins to 5nm steps (averaging within each bin)
+4. Converts from µW/cm²/nm to µW/cm² per bin (multiply by bin width)
+
+Usage
+-----
     pixi run migrate
 """
 
@@ -26,7 +30,23 @@ def bin_spectrum(wavelengths, intensities, bin_size=5):
     """
     Bin spectrum data into fixed wavelength steps.
 
-    Returns bin centers and mean intensity per bin.
+    Averages intensity values within each wavelength bin, ignoring NaN values.
+
+    Parameters
+    ----------
+    wavelengths : numpy.ndarray
+        Array of wavelength values in nm.
+    intensities : numpy.ndarray
+        Array of intensity or irradiance values.
+    bin_size : int, optional
+        Width of each wavelength bin in nm (default: 5).
+
+    Returns
+    -------
+    bin_centers : numpy.ndarray
+        Center wavelength of each bin in nm.
+    binned_intensities : numpy.ndarray
+        Mean intensity/irradiance per bin.
     """
     wl_min = np.floor(wavelengths.min() / bin_size) * bin_size
     wl_max = np.ceil(wavelengths.max() / bin_size) * bin_size
@@ -49,8 +69,18 @@ def convert_txt_to_csv(txt_path: Path) -> Path:
     """
     Convert a tab-separated OceanView txt file to CSV format.
 
-    OceanView outputs µW/cm²/nm. We convert to µW/cm² per 5nm bin
-    (same as spectrometer_logger.py output).
+    OceanView outputs W/m²/nm which is converted to µW/cm² per 5nm bin
+    to match the output format of spectrometer_logger.py.
+
+    Parameters
+    ----------
+    txt_path : pathlib.Path
+        Path to the input txt file.
+
+    Returns
+    -------
+    pathlib.Path
+        Path to the created CSV file.
     """
     # Read the tab-separated data
     wavelengths = []
@@ -99,6 +129,17 @@ def convert_txt_to_csv(txt_path: Path) -> Path:
 
 
 def main():
+    """
+    Migrate all OceanView txt files in the data directory to CSV format.
+
+    Scans data/ for .txt files and converts each to a spectrum_*.csv file.
+    Original txt files are preserved; user must delete them manually.
+
+    Returns
+    -------
+    int
+        Exit code: 0 if all conversions succeeded, 1 if any errors occurred.
+    """
     if not DATA_DIR.exists():
         print(f"Data directory '{DATA_DIR}' does not exist.")
         return 1
