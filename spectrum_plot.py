@@ -65,12 +65,14 @@ def load_all_spectra(data_dir):
     return wavelengths, all_values, calibrated, csv_files
 
 
-def create_spectrum_plot(wavelengths, all_values, calibrated, n_files, title=None, y_min=0.1):
+def create_spectrum_plot(wavelengths, all_values, calibrated, n_files, title=None, y_min=0.1, y_max=None, all_peaks=False):
     """
     Create a spectrum plot figure.
 
     Args:
         y_min: Minimum value for y-axis (default: 0.1)
+        y_max: Maximum value for y-axis (default: None, auto-scale)
+        all_peaks: If True, show all local maxima without filtering (default: False)
 
     Returns (fig, ax, mean_safe, total_values, mean_total, total_label, total_unit).
     """
@@ -130,7 +132,7 @@ def create_spectrum_plot(wavelengths, all_values, calibrated, n_files, title=Non
     ax.set_ylabel(y_label, fontsize=12)
     ax.set_title(title, fontsize=14)
     ax.set_yscale('log')
-    ax.set_ylim(bottom=y_min)
+    ax.set_ylim(bottom=y_min, top=y_max)
     ax.set_xlim(wavelengths.min(), wavelengths.max())
     ax.grid(True, alpha=0.3, which='both')
     ax.legend(loc='upper right')
@@ -139,17 +141,20 @@ def create_spectrum_plot(wavelengths, all_values, calibrated, n_files, title=Non
     local_max_indices = []
     for i in range(1, len(mean_safe) - 1):
         if mean_safe[i] > mean_safe[i-1] and mean_safe[i] > mean_safe[i+1]:
-            if mean_safe[i] > 0.5:
+            if all_peaks or mean_safe[i] > 0.5:
                 local_max_indices.append(i)
 
-    # Filter to keep only prominent peaks
-    prominent_peaks = []
-    for i in local_max_indices:
-        left_min = np.min(mean_safe[max(0, i-5):i])
-        right_min = np.min(mean_safe[i+1:min(len(mean_safe), i+6)])
-        prominence = mean_safe[i] / max(left_min, right_min)
-        if prominence > 1.2:
-            prominent_peaks.append(i)
+    # Filter to keep only prominent peaks (skip if all_peaks is True)
+    if all_peaks:
+        prominent_peaks = local_max_indices
+    else:
+        prominent_peaks = []
+        for i in local_max_indices:
+            left_min = np.min(mean_safe[max(0, i-5):i])
+            right_min = np.min(mean_safe[i+1:min(len(mean_safe), i+6)])
+            prominence = mean_safe[i] / max(left_min, right_min)
+            if prominence > 1.2:
+                prominent_peaks.append(i)
 
     # Annotate local maxima with vertical lines and wavelength labels
     # Find the highest peak value among prominent peaks
@@ -162,6 +167,14 @@ def create_spectrum_plot(wavelengths, all_values, calibrated, n_files, title=Non
         # Convert highest peak to display coordinates and add 50 pixels
         highest_display = ax.transData.transform((wavelengths[0], highest_peak_val))
         label_y_display = highest_display[1] + 50
+
+        # Get the y_max in display coordinates and ensure labels stay inside
+        current_ylim = ax.get_ylim()
+        ymax_display = ax.transData.transform((0, current_ylim[1]))[1]
+        # Leave ~25 pixels margin for the text box itself
+        max_label_display = ymax_display - 25
+        if label_y_display > max_label_display:
+            label_y_display = max_label_display
 
         for idx in prominent_peaks:
             wl = wavelengths[idx]

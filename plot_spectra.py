@@ -6,10 +6,13 @@ Shows individual spectra as line plots and the mean spectrum.
 X-axis: wavelength (nm), Y-axis: irradiance (µW/cm² per 5nm bin, log scale)
 
 Usage:
-    pixi run plot                      # Plot spectra from data/
-    pixi run plot <directory>          # Plot spectra from specified directory
-    pixi run plot --min 0.01           # Set y-axis minimum to 0.01
-    pixi run plot <directory> --min 1  # Combine both options
+    pixi run plot                          # Plot spectra from data/
+    pixi run plot <directory>              # Plot spectra from specified directory
+    pixi run plot --min 0.01               # Set y-axis minimum to 0.01
+    pixi run plot --max 1000               # Set y-axis maximum to 1000
+    pixi run plot --output result.png      # Save to file instead of displaying
+    pixi run plot --allpeaks               # Show all local maxima
+    pixi run plot <directory> --min 1      # Combine options
 """
 
 import argparse
@@ -28,6 +31,12 @@ def main():
                         help="Data directory (default: data/)")
     parser.add_argument("--min", type=float, default=0.1, dest="y_min",
                         help="Y-axis minimum value (default: 0.1)")
+    parser.add_argument("--max", type=float, default=None, dest="y_max",
+                        help="Y-axis maximum value (default: auto)")
+    parser.add_argument("--output", "-o", type=str, default=None,
+                        help="Save plot to file instead of displaying")
+    parser.add_argument("--allpeaks", action="store_true",
+                        help="Show all local maxima, not just prominent ones")
     args = parser.parse_args()
 
     # Determine data directory
@@ -56,13 +65,21 @@ def main():
 
     # Create plot
     fig, ax, mean_safe, total_values, mean_total, total_label, total_unit = create_spectrum_plot(
-        wavelengths, all_values, calibrated, len(csv_files), title=title, y_min=args.y_min
+        wavelengths, all_values, calibrated, len(csv_files), title=title, y_min=args.y_min, y_max=args.y_max,
+        all_peaks=args.allpeaks
     )
 
     print(f"{total_label} (mean): {mean_total:.2f} {total_unit}")
     print(f"{total_label} range: {min(total_values):.2f} - {max(total_values):.2f} {total_unit}")
 
-    plt.show()
+    if args.output:
+        # Save to file with same parameters as save_results.py
+        fig.set_size_inches(1600 / 100, 1000 / 100)
+        fig.savefig(args.output, dpi=100, bbox_inches='tight')
+        plt.close(fig)
+        print(f"Saved plot: {args.output}")
+    else:
+        plt.show()
 
 
 if __name__ == "__main__":
