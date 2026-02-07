@@ -72,9 +72,11 @@ Displays all spectra with individual traces and mean spectrum. Shows total irrad
 
 ```bash
 pixi run save "Experiment name"
+pixi run save "Experiment name" --min 0.01 --max 1000
+pixi run save "Experiment name" --allpeaks
 ```
 
-Saves the plot as PNG and moves data files to `results/Experiment name_data/`.
+Saves the plot as PNG and moves data files to `results/Experiment name_data/`. Accepts the same `--min`, `--max`, and `--allpeaks` options as `pixi run plot`.
 
 ### Cleanup
 
