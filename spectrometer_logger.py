@@ -25,7 +25,7 @@ from pathlib import Path
 
 import numpy as np
 import seabreeze
-seabreeze.use("cseabreeze")
+seabreeze.use("pyseabreeze")
 from seabreeze.spectrometers import Spectrometer, list_devices
 
 
