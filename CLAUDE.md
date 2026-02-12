@@ -4,7 +4,7 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 ## Project Overview
 
-Ocean Optics USB4000 spectrometer data acquisition and analysis toolkit. Captures, calibrates, and visualizes spectral irradiance data using the seabreeze library.
+SpecSail uses the seabreeze library to provide simple tools for collecting and visualizing light spectrum measurements.
 
 ## Commands
 

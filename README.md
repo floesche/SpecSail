@@ -1,6 +1,6 @@
-# oceanstuff
+# SpecSail
 
-Data acquisition and analysis toolkit for Ocean Optics USB4000 spectrometer.
+SpecSail uses the seabreeze library to provide simple tools for collecting and visualizing light spectrum measurements.
 
 ## Features
 
@@ -21,7 +21,7 @@ Data acquisition and analysis toolkit for Ocean Optics USB4000 spectrometer.
 
 ```bash
 git clone <repository>
-cd oceanstuff
+cd specsail
 pixi install
 ```
 
@@ -118,7 +118,7 @@ If neither is available, raw intensity counts are logged.
 ## File Structure
 
 ```
-oceanstuff/
+specsail/
 ├── spectrometer.py         # Live spectrum viewer
 ├── spectrometer_logger.py  # Data acquisition and logging
 ├── spectrum_plot.py        # Shared plotting module

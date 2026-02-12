@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 """
-Sunlight calibration for Ocean Optics USB4000 spectrometer.
+Sunlight calibration for seabreeze-compatible spectrometers.
 
 Uses the AM1.5G solar reference spectrum (NREL/ASTM G173-03) to compute
 calibration coefficients for converting raw counts to absolute spectral

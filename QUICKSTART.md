@@ -6,7 +6,7 @@
 2. Clone and install:
    ```bash
    git clone <repository>
-   cd oceanstuff
+   cd specsail
    pixi install
    ```
 3. Connect USB4000 spectrometer

@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 """
-Live spectrum viewer for Ocean Optics USB4000 spectrometer.
+Live spectrum viewer for seabreeze-compatible spectrometers.
 
 Displays a real-time plot of the current spectrum with auto-scaling.
 Useful for alignment, checking signal levels, and monitoring.

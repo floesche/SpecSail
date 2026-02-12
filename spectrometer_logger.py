@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 """
-Spectrometer logger for Ocean Optics USB4000.
+Spectrometer logger for seabreeze-compatible spectrometers.
 
 Collects spectra over 2.5-second integration windows, applying calibration
 and binning into 5nm wavelength steps. Each CSV file contains all individual
