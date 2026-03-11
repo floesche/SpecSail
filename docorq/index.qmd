@@ -1,0 +1,6 @@
+---
+title: SpecSail
+
+---
+
+This is a project to use OceanView spectrometer.
